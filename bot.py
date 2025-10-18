@@ -5,7 +5,7 @@ import asyncio
 from keep_alive import keep_alive
 
 # -------------------------------
-# 1️⃣ Put your bot token here
+# 1️⃣ Bot token
 # -------------------------------
 BOT_TOKEN = os.environ['BOT_TOKEN']
 
@@ -15,7 +15,6 @@ BOT_TOKEN = os.environ['BOT_TOKEN']
 intents = discord.Intents.default()
 intents.message_content = True  # Needed to read messages
 bot = commands.Bot(command_prefix="i!", intents=intents)
-
 
 # -------------------------------
 # 3️⃣ Load all cogs from cogs/
@@ -31,7 +30,6 @@ async def load_cogs():
             except Exception as e:
                 print(f"Failed to load cog {cog_name}: {e}")
 
-
 # -------------------------------
 # 4️⃣ Bot events
 # -------------------------------
@@ -39,20 +37,28 @@ async def load_cogs():
 async def on_ready():
     print(f"Logged in as {bot.user}")
 
+# -------------------------------
+# 5️⃣ Optional: on_message handler
+# -------------------------------
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return  # Ignore bot messages
+    # Add any custom code here if needed
+
+    await bot.process_commands(message)  # Important to process commands!
 
 # -------------------------------
-# 5️⃣ Main function
+# 6️⃣ Main function
 # -------------------------------
 async def main():
     async with bot:
-        await load_cogs()
-        keep_alive()
-        await bot.start(BOT_TOKEN)
-        await bot.load_extension("cogs.ping")
-
+        keep_alive()           # Start web server to keep bot alive
+        await load_cogs()      # Load all cogs from cogs folder
+        await bot.start(BOT_TOKEN)  # Start the bot
 
 # -------------------------------
-# 6️⃣ Run the bot
+# 7️⃣ Run the bot
 # -------------------------------
 if __name__ == "__main__":
     asyncio.run(main())
