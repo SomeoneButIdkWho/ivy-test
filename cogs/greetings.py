@@ -84,14 +84,14 @@ class Greetings(commands.Cog):
             if bot_name_found:
                 bot_name_position = content_lower.find(bot_name_found)
                 repeatable_position = content_lower.find(repeatable_word)
-                
+
                 if bot_name_position < repeatable_position:
                     reply_text = f"{author_mention} {repeatable_word}"
                 else:
                     reply_text = f"{repeatable_word} {author_mention}"
             else:
                 reply_text = f"{repeatable_word} {author_mention}"
-            
+
             await message.reply(reply_text)
             return
 
