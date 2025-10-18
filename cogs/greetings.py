@@ -2,11 +2,13 @@ from discord.ext import commands
 import random
 import re
 
+
 class Greetings(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
 
-        # Random cozy greetings
+        # Cozy greeting messages
         self.greetings = [
             'Hello', 'Hey', 'Yo', "hey! hi there 🌱",
             "oh hey… didn’t expect to see you", "hi! how’s your day going?",
@@ -42,39 +44,53 @@ class Greetings(commands.Cog):
             "hi! just being here is already enough"
         ]
 
+        # Trigger words
         self.greeting_triggers = ['hi', 'hello', 'hey', 'wsg']
-        self.bot_names = ['ivy', 'ivy-bot', 'ivybot', 'ivy-chan', 'ivychan', 'ivi', 'ivee']
+        self.bot_names = [
+            'ivy', 'ivy-bot', 'ivybot', 'ivy-chan', 'ivychan', 'ivi', 'ivee'
+        ]
         self.repeatable_greetings = [
             'sup', 'hii', 'hiii', 'hai', 'hoi', 'hola', 'bonjour',
-            'como estas', 'ohayo', 'ohayo gozaimasu', 'hihi',
-            'hoihoi', 'pluh', 'cuh', 'yoo', 'yooo'
+            'como estas', 'ohayo', 'ohayo gozaimasu', 'hihi', 'hoihoi', 'pluh',
+            'cuh', 'yoo', 'yooo'
         ]
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # === Never respond to bots ===
+        # --- Ignore bots ---
         if message.author.bot:
             return
+
+        # --- Avoid double replies per message ---
+        if hasattr(message, "greeted_by_bot"):
+            return
+        message.greeted_by_bot = True
 
         content_lower = message.content.lower()
         author_mention = message.author.mention
         bot_mentioned = self.bot.user in message.mentions
+        bot_name_found = any(
+            re.search(rf"\b{name}\b", content_lower)
+            for name in self.bot_names)
 
-        # === Check if the message contains the bot's name ===
-        bot_name_found = any(re.search(rf"\b{name}\b", content_lower) for name in self.bot_names)
-
-        # === Check repeatable greetings ===
-        repeatable_word = next((word for word in self.repeatable_greetings if re.search(rf"\b{word}\b", content_lower)), None)
+        # --- Repeatable greetings ---
+        repeatable_word = next((word for word in self.repeatable_greetings
+                                if re.search(rf"\b{word}\b", content_lower)),
+                               None)
         if repeatable_word and (bot_mentioned or bot_name_found):
             await message.reply(f"{repeatable_word} {author_mention}")
             return
 
-        # === Standard greeting patterns ===
+        # --- Standard greeting patterns ---
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
 
-        if bot_mentioned or bot_name_found or re.search(greeting_name_pattern, content_lower) or re.search(name_greeting_pattern, content_lower):
-            await message.reply(f"{random.choice(self.greetings)} {author_mention}")
+        if bot_mentioned or bot_name_found or re.search(
+                greeting_name_pattern, content_lower) or re.search(
+                    name_greeting_pattern, content_lower):
+            await message.reply(
+                f"{random.choice(self.greetings)} {author_mention}")
+
 
 async def setup(bot):
     await bot.add_cog(Greetings(bot))
