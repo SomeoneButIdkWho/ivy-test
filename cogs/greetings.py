@@ -40,12 +40,11 @@ class Greetings(commands.Cog):
 
         repeatable_word = None
         for word in self.repeatable_greetings:
-            if word in content_lower:
-                repeatable_word = re.search(rf"\b{word}\b",
-                                            content_lower).group()
+            if re.search(rf"\b{word}\b", content_lower):
+                repeatable_word = word
                 break
 
-        should_respond = bot_mentioned or greeting_with_name or name_with_greeting
+        should_respond = bot_mentioned or greeting_with_name or name_with_greeting or repeatable_word
 
         if should_respond:
             if repeatable_word:
