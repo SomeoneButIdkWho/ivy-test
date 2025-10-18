@@ -7,24 +7,16 @@ class Greetings(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.greetings = ['Hello', 'Hey', 'Yo']
-        self.greeting_triggers = [
-            'hi',
-            'hello',
-            'hey',
-            'wsg',
-            "hey! hi there 🌱",
-            "oh hey… didn’t expect to see you",
-            "hi! how’s your day going?",
-            "hey hey! just taking a little break",
-            "oh, hi! glad you said hi",
+        self.greetings = [
+            'Hello', 'Hey', 'Yo', "hey! hi there 🌱",
+            "oh hey… didn’t expect to see you", "hi! how’s your day going?",
+            "hey hey! just taking a little break", "oh, hi! glad you said hi",
             "hey… hope you’re doing okay today",
             "hi! did anything interesting happen yet?",
             "hey… just watering some plants, you?",
             "hi there! you always pop up at the right time 🌿",
             "hey! i was just thinking about taking a walk outside",
-            "hi! good to hear from you",
-            "hey… nice to see you here",
+            "hi! good to hear from you", "hey… nice to see you here",
             "hi! hope the day’s treating you gently",
             "oh hey… how’s it growing?",
             "hi! did you remember to drink some water today?",
@@ -47,7 +39,13 @@ class Greetings(commands.Cog):
             "hey… i was hoping you’d pop up",
             "hi! how are the little things going?",
             "hey hey… let’s make this chat nice",
-            "hi! just being here is already enough",
+            "hi! just being here is already enough"
+        ]
+        self.greeting_triggers = [
+            'hi',
+            'hello',
+            'hey',
+            'wsg',
         ]
         self.bot_names = [
             'ivy', 'ivy-bot', 'ivybot', 'ivy-chan', 'ivychan', 'ivi', 'ivee'
