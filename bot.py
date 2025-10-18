@@ -1,60 +1,53 @@
-# main.py
 import discord
 from discord.ext import commands
 import os
-from keep_alive import keep_alive  # Only if using Replit
+import asyncio
+from keep_alive import keep_alive
 
 # -------------------------------
-# 1️⃣ Bot token
+# 1️⃣ Put your bot token here
 # -------------------------------
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+BOT_TOKEN = os.environ['BOT_TOKEN']
 
 # -------------------------------
-# 2️⃣ Intents
+# 2️⃣ Set up intents & bot
 # -------------------------------
 intents = discord.Intents.default()
-intents.message_content = True
-intents.guilds = True
-intents.members = True
-
-# -------------------------------
-# 3️⃣ Bot setup
-# -------------------------------
+intents.message_content = True  # Needed to read messages
 bot = commands.Bot(command_prefix="i!", intents=intents)
 
 # -------------------------------
-# 4️⃣ Events
+# 3️⃣ Load all cogs from cogs/
+# -------------------------------
+async def load_cogs():
+    cogs_folder = "./cogs"
+    for filename in os.listdir(cogs_folder):
+        if filename.endswith(".py"):
+            cog_name = filename[:-3]  # Remove .py
+            try:
+                await bot.load_extension(f"cogs.{cog_name}")
+                print(f"Loaded cog: {cog_name}")
+            except Exception as e:
+                print(f"Failed to load cog {cog_name}: {e}")
+
+# -------------------------------
+# 4️⃣ Bot events
 # -------------------------------
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    print("------")
-
-# Prevent bot from replying to itself
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return  # Ignore messages from bots
-    await bot.process_commands(message)
+    print(f"Logged in as {bot.user}")
 
 # -------------------------------
-# 5️⃣ Load cogs (modular commands)
+# 5️⃣ Main function
 # -------------------------------
-initial_extensions = [
-    "cogs.ping",       # Example ping command
-    "cogs.greetings"   # Future greetings cog
-]
+async def main():
+    async with bot:
+        await load_cogs()
+        keep_alive()
+        await bot.start(BOT_TOKEN)
 
+# -------------------------------
+# 6️⃣ Run the bot
+# -------------------------------
 if __name__ == "__main__":
-    for extension in initial_extensions:
-        try:
-            bot.load_extension(extension)
-            print(f"Loaded extension {extension}")
-        except Exception as e:
-            print(f"Failed to load extension {extension}: {e}")
-
-# -------------------------------
-# 6️⃣ Keep alive (for Replit) and run bot
-# -------------------------------
-keep_alive()  # Optional, only if using Replit
-bot.run(BOT_TOKEN)
+    asyncio.run(main())
