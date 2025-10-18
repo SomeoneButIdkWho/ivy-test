@@ -1,43 +1,57 @@
+# main.py
 import discord
 from discord.ext import commands
 import os
-import asyncio
-from keep_alive import keep_alive
+from keep_alive import keep_alive  # Only if you're using Replit or similar
 
-BOT_TOKEN = os.environ['BOT_TOKEN']
+# -------------------------------
+# 1️⃣ Bot token
+# -------------------------------
+BOT_TOKEN = os.environ.get(
+    'BOT_TOKEN')  # Make sure your environment variable is set
 
+# -------------------------------
+# 2️⃣ Intents
+# -------------------------------
 intents = discord.Intents.default()
-intents.message_content = True
+intents.message_content = True  # Needed to read message content
+intents.guilds = True
+intents.members = True
+
+# -------------------------------
+# 3️⃣ Bot setup
+# -------------------------------
 bot = commands.Bot(command_prefix="i!", intents=intents)
 
-# Load cogs
-async def load_cogs():
-    cogs_folder = "./cogs"
-    for filename in os.listdir(cogs_folder):
-        if filename.endswith(".py"):
-            cog_name = filename[:-3]
-            try:
-                await bot.load_extension(f"cogs.{cog_name}")
-                print(f"Loaded cog: {cog_name}")
-            except Exception as e:
-                print(f"Failed to load cog {cog_name}: {e}")
 
-# Events
+# -------------------------------
+# 4️⃣ Events
+# -------------------------------
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    print("------")
 
+
+# Prevent bot from replying to itself
 @bot.event
 async def on_message(message):
     if message.author.bot:
-        return
-    await bot.process_commands(message)
+        return  # Ignore messages from bots including itself
 
-# Main
-async def main():
-    keep_alive()           # keep bot alive
-    await load_cogs()      # load all cogs
-    await bot.start(BOT_TOKEN)  # start bot normally
+    await bot.process_commands(message)  # Allow commands to be processed
 
-if __name__ == "__main__":
-    asyncio.run(main())
+
+# -------------------------------
+# 5️⃣ Commands
+# -------------------------------
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong!")
+
+
+# -------------------------------
+# 6️⃣ Keep alive (for Replit) and run bot
+# -------------------------------
+keep_alive()  # Optional, only if using Replit
+bot.run(BOT_TOKEN)
