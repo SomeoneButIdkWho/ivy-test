@@ -8,5 +8,5 @@ class Echo(commands.Cog):
     async def echo(self, ctx, *, text):
         await ctx.send(text)
 
-def setup(bot):
-    bot.add_cog(Echo(bot))
+async def setup(bot):
+    await bot.add_cog(Echo(bot))

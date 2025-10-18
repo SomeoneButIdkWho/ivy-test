@@ -8,5 +8,5 @@ class Reply(commands.Cog):
     async def reply(self, ctx, *, text):
         await ctx.reply(text)
 
-def setup(bot):
-    bot.add_cog(Reply(bot))
+async def setup(bot):
+    await bot.add_cog(Reply(bot))
