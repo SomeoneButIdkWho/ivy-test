@@ -2,19 +2,18 @@
 import discord
 from discord.ext import commands
 import os
-from keep_alive import keep_alive  # Only if you're using Replit or similar
+from keep_alive import keep_alive  # Only if using Replit
 
 # -------------------------------
 # 1️⃣ Bot token
 # -------------------------------
-BOT_TOKEN = os.environ.get(
-    'BOT_TOKEN')  # Make sure your environment variable is set
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
 # -------------------------------
 # 2️⃣ Intents
 # -------------------------------
 intents = discord.Intents.default()
-intents.message_content = True  # Needed to read message content
+intents.message_content = True
 intents.guilds = True
 intents.members = True
 
@@ -22,7 +21,6 @@ intents.members = True
 # 3️⃣ Bot setup
 # -------------------------------
 bot = commands.Bot(command_prefix="i!", intents=intents)
-
 
 # -------------------------------
 # 4️⃣ Events
@@ -32,23 +30,28 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
 
-
 # Prevent bot from replying to itself
 @bot.event
 async def on_message(message):
     if message.author.bot:
-        return  # Ignore messages from bots including itself
-
-    await bot.process_commands(message)  # Allow commands to be processed
-
+        return  # Ignore messages from bots
+    await bot.process_commands(message)
 
 # -------------------------------
-# 5️⃣ Commands
+# 5️⃣ Load cogs (modular commands)
 # -------------------------------
-@bot.command()
-async def ping(ctx):
-    await ctx.send("Pong!")
+initial_extensions = [
+    "cogs.ping",       # Example ping command
+    "cogs.greetings"   # Future greetings cog
+]
 
+if __name__ == "__main__":
+    for extension in initial_extensions:
+        try:
+            bot.load_extension(extension)
+            print(f"Loaded extension {extension}")
+        except Exception as e:
+            print(f"Failed to load extension {extension}: {e}")
 
 # -------------------------------
 # 6️⃣ Keep alive (for Replit) and run bot
