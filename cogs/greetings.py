@@ -45,16 +45,19 @@ class Greetings(commands.Cog):
                 bot_name_found = bot_name
                 break
 
-        if repeatable_word and bot_name_found:
-            bot_name_position = content_lower.find(bot_name_found)
-            repeatable_position = content_lower.find(repeatable_word)
-            
-            if bot_name_position < repeatable_position:
-                reply = f"{author_mention} {repeatable_word}"
+        if repeatable_word and (bot_name_found or bot_mentioned):
+            if bot_name_found:
+                bot_name_position = content_lower.find(bot_name_found)
+                repeatable_position = content_lower.find(repeatable_word)
+                
+                if bot_name_position < repeatable_position:
+                    reply_text = f"{author_mention} {repeatable_word}"
+                else:
+                    reply_text = f"{repeatable_word} {author_mention}"
             else:
-                reply = f"{repeatable_word} {author_mention}"
+                reply_text = f"{repeatable_word} {author_mention}"
             
-            await message.reply(reply)
+            await message.reply(reply_text)
             return
 
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
@@ -62,13 +65,9 @@ class Greetings(commands.Cog):
         greeting_with_name = re.search(greeting_name_pattern, content_lower)
         name_with_greeting = re.search(name_greeting_pattern, content_lower)
 
-        should_respond = bot_mentioned or greeting_with_name or name_with_greeting or repeatable_word
+        should_respond = bot_mentioned or greeting_with_name or name_with_greeting
 
         if should_respond:
-            if repeatable_word:
-                reply = f"{repeatable_word} {author_mention}"
-                await message.channel.send(reply)
-                return
             await message.channel.send(
                 f"{random.choice(self.greetings)} {author_mention}")
 
