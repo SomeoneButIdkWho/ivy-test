@@ -1,9 +1,14 @@
+run = "python keep_alive.py & watchmedo auto-restart --pattern='*.py' --recursive python bot.py"
+language = "python3"
+entrypoint = "bot.py"
 modules = ["python-3.11"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
 [agent]
 expertMode = true
-
-[nix]
-channel = "stable-25_05"
 
 [workflows]
 runButton = "Project"
@@ -28,15 +33,3 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 46365
-externalPort = 3000
-
-[deployment]
-deploymentTarget = "vm"
-run = ["python", "bot.py"]
