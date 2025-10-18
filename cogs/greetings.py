@@ -2,7 +2,6 @@ from discord.ext import commands
 import random
 import re
 
-
 class Greetings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -53,46 +52,28 @@ class Greetings(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Ignore messages from bots (including Ivy itself)
+        # === Never respond to bots ===
         if message.author.bot:
             return
 
         content_lower = message.content.lower()
         author_mention = message.author.mention
-
-        # --- Detect mentions and bot names ---
         bot_mentioned = self.bot.user in message.mentions
-        bot_name_found = next((name for name in self.bot_names if re.search(rf"\b{name}\b", content_lower)), None)
 
-        # --- Detect repeatable greetings ---
+        # === Check if the message contains the bot's name ===
+        bot_name_found = any(re.search(rf"\b{name}\b", content_lower) for name in self.bot_names)
+
+        # === Check repeatable greetings ===
         repeatable_word = next((word for word in self.repeatable_greetings if re.search(rf"\b{word}\b", content_lower)), None)
-
-        # --- If it's a repeatable greeting (even without mention) ---
-        if repeatable_word and (bot_name_found or bot_mentioned or not bot_mentioned):
-            if bot_name_found:
-                bot_pos = content_lower.find(bot_name_found)
-                greet_pos = content_lower.find(repeatable_word)
-
-                # Preserve natural order
-                if bot_pos < greet_pos:
-                    reply_text = f"{author_mention} {repeatable_word}"
-                else:
-                    reply_text = f"{repeatable_word} {author_mention}"
-            else:
-                reply_text = f"{repeatable_word} {author_mention}"
-
-            await message.reply(reply_text)
+        if repeatable_word and (bot_mentioned or bot_name_found):
+            await message.reply(f"{repeatable_word} {author_mention}")
             return
 
-        # --- Normal greeting pattern checks ---
+        # === Standard greeting patterns ===
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
 
-        if (
-            bot_mentioned
-            or re.search(greeting_name_pattern, content_lower)
-            or re.search(name_greeting_pattern, content_lower)
-        ):
+        if bot_mentioned or bot_name_found or re.search(greeting_name_pattern, content_lower) or re.search(name_greeting_pattern, content_lower):
             await message.reply(f"{random.choice(self.greetings)} {author_mention}")
 
 async def setup(bot):
