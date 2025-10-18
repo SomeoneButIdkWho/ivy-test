@@ -33,31 +33,40 @@ class Greetings(commands.Cog):
 
         bot_mentioned = self.bot.user in message.mentions
 
-        greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers + self.repeatable_greetings)})\b.*\b({'|'.join(self.bot_names)})\b"
-        name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers + self.repeatable_greetings)})\b"
-        greeting_with_name = re.search(greeting_name_pattern, content_lower)
-        name_with_greeting = re.search(name_greeting_pattern, content_lower)
-
         repeatable_word = None
         for word in self.repeatable_greetings:
             if re.search(rf"\b{word}\b", content_lower):
                 repeatable_word = word
                 break
 
+        bot_name_found = None
+        for bot_name in self.bot_names:
+            if re.search(rf"\b{bot_name}\b", content_lower):
+                bot_name_found = bot_name
+                break
+
+        if repeatable_word and bot_name_found:
+            bot_name_position = content_lower.find(bot_name_found)
+            repeatable_position = content_lower.find(repeatable_word)
+            
+            if bot_name_position < repeatable_position:
+                reply = f"{author_mention} {repeatable_word}"
+            else:
+                reply = f"{repeatable_word} {author_mention}"
+            
+            await message.reply(reply)
+            return
+
+        greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
+        name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
+        greeting_with_name = re.search(greeting_name_pattern, content_lower)
+        name_with_greeting = re.search(name_greeting_pattern, content_lower)
+
         should_respond = bot_mentioned or greeting_with_name or name_with_greeting or repeatable_word
 
         if should_respond:
             if repeatable_word:
-                if any(bot_name in content_lower
-                       for bot_name in self.bot_names):
-                    if any(
-                            content_lower.startswith(bot_name)
-                            for bot_name in self.bot_names):
-                        reply = f"{author_mention} {repeatable_word}"
-                    else:
-                        reply = f"{repeatable_word} {author_mention}"
-                else:
-                    reply = f"{repeatable_word} {author_mention}"
+                reply = f"{repeatable_word} {author_mention}"
                 await message.channel.send(reply)
                 return
             await message.channel.send(
