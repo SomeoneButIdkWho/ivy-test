@@ -1,3 +1,13 @@
 run = "python keep_alive.py & watchmedo auto-restart --pattern='*.py' --recursive python bot.py"
 language = "python3"
 entrypoint = "bot.py"
+modules = ["python-3.11"]
+
+[agent]
+expertMode = true
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[nix]

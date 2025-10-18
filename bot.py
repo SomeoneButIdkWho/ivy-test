@@ -14,7 +14,7 @@ BOT_TOKEN = os.environ['BOT_TOKEN']
 # -------------------------------
 intents = discord.Intents.default()
 intents.message_content = True  # Needed to read messages
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="i!", intents=intents)
 
 # -------------------------------
 # 3️⃣ Load all cogs from cogs/
