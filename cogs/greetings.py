@@ -75,9 +75,9 @@ class Greetings(commands.Cog):
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
 
-        if bot_mentioned or bot_name_found or re.search(
-                greeting_name_pattern, content_lower) or re.search(
-                    name_greeting_pattern, content_lower):
+        if ((re.search(greeting_name_pattern, content_lower) or re.search(
+                name_greeting_pattern, content_lower) or bot_mentioned)
+                and content_lower.strip() not in self.bot_names):
             await message.reply(
                 f"{random.choice(self.greetings)} {author_mention}")
 
