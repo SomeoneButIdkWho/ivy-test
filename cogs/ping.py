@@ -8,11 +8,11 @@ class Ping(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        latency = round(self.bot.latency * 1000)  # ms
+        latency = round(self.bot.latency * 1000)
         uptime = datetime.datetime.utcnow() - self.start_time
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
-        await ctx.send(f"🏓 Pong!\nLatency: `{latency}ms`\nUptime: `{hours}h {minutes}m {seconds}s`")
+        await ctx.send(f"Pong🌿!\nLatency: `{latency}ms`\nUptime: `{hours}h {minutes}m {seconds}s`")
 
 async def setup(bot):
     await bot.add_cog(Ping(bot))
