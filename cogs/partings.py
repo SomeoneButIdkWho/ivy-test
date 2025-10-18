@@ -43,8 +43,15 @@ class Farewell(commands.Cog):
             await message.reply(f"{repeatable_word} {author_mention}")
             return
 
+        # Only reply if a trigger word AND the bot name are present
         farewell_name_pattern = rf"\b({'|'.join(self.farewell_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_farewell_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.farewell_triggers)})\b"
+
+        if (re.search(farewell_name_pattern, content_lower)
+                or re.search(name_farewell_pattern, content_lower)
+            ) and content_lower.strip() not in self.bot_names:
+            await message.reply(
+                f"{random.choice(self.farewells)} {author_mention}")
 
         if bot_mentioned or bot_name_found or re.search(
                 farewell_name_pattern, content_lower) or re.search(
