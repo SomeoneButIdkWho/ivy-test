@@ -2,9 +2,7 @@ from discord.ext import commands
 import random
 import re
 
-
 class Greetings(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
 
@@ -46,13 +44,11 @@ class Greetings(commands.Cog):
 
         # Trigger words
         self.greeting_triggers = ['hi', 'hello', 'hey', 'wsg']
-        self.bot_names = [
-            'ivy', 'ivy-bot', 'ivybot', 'ivy-chan', 'ivychan', 'ivi', 'ivee'
-        ]
+        self.bot_names = ['ivy', 'ivy-bot', 'ivybot', 'ivy-chan', 'ivychan', 'ivi', 'ivee']
         self.repeatable_greetings = [
             'sup', 'hii', 'hiii', 'hai', 'hoi', 'hola', 'bonjour',
-            'como estas', 'ohayo', 'ohayo gozaimasu', 'hihi', 'hoihoi', 'pluh',
-            'cuh', 'yoo', 'yooo'
+            'como estas', 'ohayo', 'ohayo gozaimasu', 'hihi',
+            'hoihoi', 'pluh', 'cuh', 'yoo', 'yooo'
         ]
 
     @commands.Cog.listener()
@@ -69,14 +65,10 @@ class Greetings(commands.Cog):
         content_lower = message.content.lower()
         author_mention = message.author.mention
         bot_mentioned = self.bot.user in message.mentions
-        bot_name_found = any(
-            re.search(rf"\b{name}\b", content_lower)
-            for name in self.bot_names)
+        bot_name_found = any(re.search(rf"\b{name}\b", content_lower) for name in self.bot_names)
 
         # --- Repeatable greetings ---
-        repeatable_word = next((word for word in self.repeatable_greetings
-                                if re.search(rf"\b{word}\b", content_lower)),
-                               None)
+        repeatable_word = next((word for word in self.repeatable_greetings if re.search(rf"\b{word}\b", content_lower)), None)
         if repeatable_word and (bot_mentioned or bot_name_found):
             await message.reply(f"{repeatable_word} {author_mention}")
             return
@@ -85,11 +77,8 @@ class Greetings(commands.Cog):
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
 
-        if bot_mentioned or bot_name_found or re.search(
-                greeting_name_pattern, content_lower) or re.search(
-                    name_greeting_pattern, content_lower):
-            await message.reply(
-                f"{random.choice(self.greetings)} {author_mention}")
+        if bot_mentioned or bot_name_found or re.search(greeting_name_pattern, content_lower) or re.search(name_greeting_pattern, content_lower):
+            await message.reply(f"{random.choice(self.greetings)} {author_mention}")
 
 
 async def setup(bot):
