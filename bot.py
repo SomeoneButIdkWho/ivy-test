@@ -16,6 +16,7 @@ intents = discord.Intents.default()
 intents.message_content = True  # Needed to read messages
 bot = commands.Bot(command_prefix="i!", intents=intents)
 
+
 # -------------------------------
 # 3️⃣ Load all cogs from cogs/
 # -------------------------------
@@ -30,12 +31,14 @@ async def load_cogs():
             except Exception as e:
                 print(f"Failed to load cog {cog_name}: {e}")
 
+
 # -------------------------------
 # 4️⃣ Bot events
 # -------------------------------
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+
 
 # -------------------------------
 # 5️⃣ Main function
@@ -45,6 +48,8 @@ async def main():
         await load_cogs()
         keep_alive()
         await bot.start(BOT_TOKEN)
+        await bot.load_extension("cogs.ping")
+
 
 # -------------------------------
 # 6️⃣ Run the bot
