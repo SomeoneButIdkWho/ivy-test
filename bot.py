@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import os
 import asyncio
+import random
 from keep_alive import keep_alive
 
 BOT_TOKEN = os.environ['BOT_TOKEN']
@@ -17,26 +18,24 @@ bot = commands.Bot(command_prefix="i!", intents=intents)
 # Rotating Status List (11 entries)
 # -----------------------------
 statuses = [
-    discord.Game(name="i!help"),  # Playing: i!help
+    discord.Game(name="i!help"),
     discord.Activity(type=discord.ActivityType.listening,
-                     name="your commands"),  # Listening to your commands
+                     name="your commands"),
     discord.Activity(type=discord.ActivityType.watching,
-                     name="over Ivy’s server"),  # Watching over Ivy's server
+                     name="over Ivy’s server"),
     discord.Activity(type=discord.ActivityType.competing,
-                     name="in bot olympics"),  # Competing in bot olympics
-    discord.Game(name="with embeds"),  # Playing: with embeds
+                     name="in bot olympics"),
+    discord.Game(name="with embeds"),
     discord.Activity(type=discord.ActivityType.listening,
-                     name="server gossip"),  # Listening to server gossip
+                     name="server gossip"),
     discord.Activity(type=discord.ActivityType.streaming,
-                     name="the message queue"),  # Streaming the message queue
+                     name="the message queue"),
+    discord.Activity(type=discord.ActivityType.watching, name="the channels"),
     discord.Activity(type=discord.ActivityType.watching,
-                     name="the channels"),  # Watching the channels
-    discord.Activity(type=discord.ActivityType.watching,
-                     name="the emoji parade"),  # Watching the emoji parade
-    discord.Game(name="cleanup commands"),  # Playing: cleanup commands
-    discord.Activity(
-        type=discord.ActivityType.listening,
-        name="secret admin things")  # Listening to secret admin things
+                     name="the emoji parade"),
+    discord.Game(name="cleanup commands"),
+    discord.Activity(type=discord.ActivityType.listening,
+                     name="secret admin things")
 ]
 
 
@@ -56,15 +55,17 @@ async def load_cogs():
 
 
 # -----------------------------
-# Status Rotation Task
+# Status Rotation Task (no repeats)
 # -----------------------------
-@tasks.loop(seconds=3)  # change every 3 seconds
+@tasks.loop(seconds=3)
 async def change_status():
-    index = 0
+    last_status = None
     while True:
-        status = statuses[index % len(statuses)]
-        await bot.change_presence(activity=status)
-        index += 1
+        next_status = random.choice(statuses)
+        while next_status == last_status and len(statuses) > 1:
+            next_status = random.choice(statuses)
+        await bot.change_presence(activity=next_status)
+        last_status = next_status
         await asyncio.sleep(3)
 
 
