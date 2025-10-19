@@ -74,20 +74,14 @@ class GreetingsFarewell(commands.Cog):
         if message.author.bot:
             return
 
-        content_lower = message.content.lower().strip()
+        content_lower = message.content.lower()
         author_mention = message.author.mention
         bot_mentioned = self.bot.user in message.mentions
         bot_name_found = any(
             re.search(rf"\b{name}\b", content_lower)
             for name in self.bot_names)
 
-        # --- IGNORE empty or mention-only messages ---
-        # if message only mentions bot (like "@Ivy") or only says name ("ivy")
-        if (bot_mentioned and len(message.content.split())
-                == 1) or content_lower in self.bot_names:
-            return
-
-        # --- Repeatable greetings ---
+        # Repeatable greetings
         repeatable_word = next((word for word in self.repeatable_greetings
                                 if re.search(rf"\b{word}\b", content_lower)),
                                None)
@@ -95,38 +89,26 @@ class GreetingsFarewell(commands.Cog):
             await message.reply(f"{repeatable_word} {author_mention}")
             return
 
-        # --- Repeatable farewells ---
-        repeatable_farewell = next(
-            (word for word in self.repeatable_farewells
-             if re.search(rf"\b{word}\b", content_lower)), None)
-        if repeatable_farewell and (bot_mentioned or bot_name_found):
-            await message.reply(f"{repeatable_farewell} {author_mention}")
-            return
-
-        # --- Greeting patterns ---
+        # Greeting patterns
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
 
-        # --- Farewell patterns ---
-        farewell_name_pattern = rf"\b({'|'.join(self.farewell_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
-        name_farewell_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.farewell_triggers)})\b"
-
-        # --- Greetings check ---
-        if ((re.search(greeting_name_pattern, content_lower)
-             or re.search(name_greeting_pattern, content_lower) or
-             (bot_mentioned and any(word in content_lower
-                                    for word in self.greeting_triggers)))
-                and content_lower not in self.bot_names):
+        # Check greetings (ignore single "ivy" or mention)
+        if (
+                re.search(greeting_name_pattern, content_lower) or re.search(
+                    name_greeting_pattern, content_lower) or bot_mentioned
+        ) and not content_lower.strip() in self.bot_names and not re.fullmatch(
+                rf"<@!?{self.bot.user.id}>", message.content.strip()):
             await message.reply(
                 f"{random.choice(self.greetings)} {author_mention}")
             return
 
-        # --- Farewells check ---
-        if ((re.search(farewell_name_pattern, content_lower)
-             or re.search(name_farewell_pattern, content_lower) or
-             (bot_mentioned and any(word in content_lower
-                                    for word in self.farewell_triggers)))
-                and content_lower not in self.bot_names):
+        # Farewell patterns (unchanged)
+        farewell_name_pattern = rf"\b({'|'.join(self.farewell_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
+        name_farewell_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.farewell_triggers)})\b"
+
+        if (re.search(farewell_name_pattern, content_lower)
+                or re.search(name_farewell_pattern, content_lower)):
             await message.reply(
                 f"{random.choice(self.farewells)} {author_mention}")
             return
