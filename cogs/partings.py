@@ -48,9 +48,14 @@ class Farewell(commands.Cog):
         farewell_name_pattern = rf"\b({'|'.join(self.farewell_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_farewell_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.farewell_triggers)})\b"
 
-        # Only respond if the message is not just the bot's name
-        if ((re.search(farewell_name_pattern, content_lower) or re.search(
-                name_farewell_pattern, content_lower) or bot_mentioned)
+        # Only respond if:
+        # 1) The message contains a trigger word + bot name, OR
+        # 2) The bot is mentioned with a trigger word
+        # AND the message is not just a mention or name alone
+        if ((re.search(farewell_name_pattern, content_lower)
+             or re.search(name_farewell_pattern, content_lower) or
+             (bot_mentioned and any(word in content_lower
+                                    for word in self.farewell_triggers)))
                 and content_lower.strip() not in self.bot_names):
             await message.reply(
                 f"{random.choice(self.farewells)} {author_mention}")
