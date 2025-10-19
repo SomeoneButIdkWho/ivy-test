@@ -21,6 +21,18 @@ async def load_cogs():
             except Exception as e:
                 print(f"Failed to load cog {cog_name}: {e}")
 
+statuses = [
+    discord.Game(name="i!help"),
+    discord.Activity(type=discord.ActivityType.listening, name="your commands"),
+    discord.Activity(type=discord.ActivityType.watching, name="over Ivy's server"),
+    discord.Activity(type=discord.ActivityType.competing, name="in bot olympics")
+]
+
+async def change_status():
+    for status in statuses:
+        await bot.change_presence(activity=status)
+        await asyncio.sleep(5)
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
