@@ -43,7 +43,7 @@ async def change_status():
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-    bot.loop.create_task(change_status())
+    change_status.start()
 
 
 async def main():
