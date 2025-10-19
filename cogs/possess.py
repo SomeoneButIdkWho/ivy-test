@@ -39,24 +39,44 @@ class Possess(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Ignore bot/bot-echoed messages
         if message.author.bot:
             return
 
         if (self.possessed_user and message.author.id == self.possessed_user.id
                 and self.possessed_channel):
-            # If echoing in the same channel, attempt to delete original message safely
+            # Try to delete the original message if echoing in the same channel
             if message.channel == self.possessed_channel:
                 try:
                     await message.delete()
                 except discord.Forbidden:
-                    # Can't delete, ignore
                     pass
                 except discord.HTTPException:
-                    # Message too old or another error
                     pass
-            # Echo user's message content to target channel
-            await self.possessed_channel.send(message.content)
+
+            files = []
+            # Attach all attachments (images, files, etc)
+            if message.attachments:
+                for attachment in message.attachments:
+                    # Download and re-upload attachment
+                    fp = await attachment.read()
+                    files.append(discord.File(fp,
+                                              filename=attachment.filename))
+
+            # Collect stickers as objects
+            stickers = [sticker for sticker in message.stickers]
+
+            # Prepare embeds as a list (limit 10 per message)
+            embeds = message.embeds[:10]
+
+            # Send message echo with all extras:
+            await self.possessed_channel.send(
+                content=message.content,
+                embeds=embeds if embeds else None,
+                stickers=stickers if stickers else None,
+                files=files if files else None,
+                allowed_mentions=discord.AllowedMentions(everyone=True,
+                                                         users=True,
+                                                         roles=True))
 
 
 async def setup(bot):
