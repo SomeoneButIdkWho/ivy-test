@@ -15,7 +15,7 @@ class Echo(commands.Cog):
         "Echo any message. Use a channel mention or name at the start to send there (e.g., i!echo #general hello!), or use normally to echo here."
     )
     @commands.cooldown(1, 3, commands.BucketType.user)
-    async def echo(self, ctx, *, text: str = None):  # Default to None
+    async def echo(self, ctx, *, text: str = None):
         """
         Echo a message; optionally specify a channel or use --silent.
         Usage:
@@ -67,12 +67,8 @@ class Echo(commands.Cog):
             return
 
         await target_channel.send(safe_msg)
-        if not silent:
-            if target_channel != ctx.channel:
-                await ctx.send(f"✅ Echoed to {target_channel.mention}.")
-            else:
-                await ctx.message.delete()
-                await target_channel.send(f"✅ Echoed successfully!")
+        if not silent and target_channel != ctx.channel:
+            await ctx.send(f"✅ Echoed to {target_channel.mention}.")
 
 
 async def setup(bot):
