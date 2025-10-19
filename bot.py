@@ -58,7 +58,7 @@ async def load_cogs():
 # -----------------------------
 # Status Rotation Task
 # -----------------------------
-@tasks.loop(seconds=120)  # change every 2 minutes
+@tasks.loop(seconds=3)  # change every 3 seconds
 async def change_status():
     index = 0
     while True:
