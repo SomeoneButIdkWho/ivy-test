@@ -19,13 +19,23 @@ class Spam(commands.Cog):
         "Send a burst of messages. Usage: `!spam <count> [delay] [#channel] <message>`"
     )
     @commands.is_owner()
-    async def spam(self, ctx, count: int, *args):
+    async def spam(self, ctx, count: int = None, *args):
+        if count is None:
+            await ctx.send(
+                "You must provide a count. Usage: `!spam <count> [delay] [#channel] <message>`"
+            )
+            return
         await self._spam_messages(ctx, count, args, count_mode=False)
 
     @spam.command(name="count",
                   help="Spam messages with a count prefix (1:, 2:, …)")
     @commands.is_owner()
-    async def spam_count(self, ctx, count: int, *args):
+    async def spam_count(self, ctx, count: int = None, *args):
+        if count is None:
+            await ctx.send(
+                "You must provide a count. Usage: `!spam count <count> [delay] [#channel] <message>`"
+            )
+            return
         await self._spam_messages(ctx, count, args, count_mode=True)
 
     async def _spam_messages(self, ctx, count, args, count_mode=False):
@@ -42,21 +52,26 @@ class Spam(commands.Cog):
             potential_delay = float(args[0])
             delay = potential_delay
             args = args[1:]
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
         # Check if first arg is a channel mention
         if args and args[0].startswith("<#") and args[0].endswith(">"):
-            channel_id = int(args[0][2:-1])
-            channel = ctx.guild.get_channel(channel_id)
-            if channel is None:
-                await ctx.send("Invalid channel specified.")
+            try:
+                channel_id = int(args[0][2:-1])
+                new_channel = ctx.guild.get_channel(channel_id)
+                if new_channel is None:
+                    await ctx.send("Invalid channel specified.")
+                    return
+                channel = new_channel
+                args = args[1:]
+            except Exception:
+                await ctx.send("Could not parse channel mention.")
                 return
-            args = args[1:]
 
         # Remaining args are the message
         if args:
-            message_content = " ".join(args)
+            message_content = " ".join(args).strip()
         else:
             await ctx.send("You must provide a message to spam.")
             return
@@ -73,7 +88,11 @@ class Spam(commands.Cog):
             await ctx.send("Delay too small, using minimum delay 0.05s.")
             delay = 0.05
 
-        # Check if there is already an active spam in this channel
+        if message_content == "":
+            await ctx.send("You must provide a message to spam.")
+            return
+
+        # Check for active spam in this channel
         if channel.id in self.active_spams:
             await ctx.send(
                 f"Spam already running in {channel.mention}! Cancel it first with `!spam cancel`."
@@ -84,7 +103,7 @@ class Spam(commands.Cog):
             f"Spamming **{count}** messages in {channel.mention} with {delay}s delay..."
         )
 
-        task = self.bot.loop.create_task(
+        task = asyncio.create_task(
             self._send_spam(channel, message_content, count, delay, status,
                             count_mode))
         self.active_spams[channel.id] = task
@@ -123,6 +142,7 @@ class Spam(commands.Cog):
         task = self.active_spams.get(ctx.channel.id)
         if task:
             task.cancel()
+            await ctx.send("Spam cancelled.")
         else:
             await ctx.send("No active spam in this channel.")
 
