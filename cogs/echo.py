@@ -17,7 +17,7 @@ class Echo(commands.Cog):
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def echo(self, ctx, *, text: str = None):
         """
-        Echo a message; optionally specify a channel or use --silent.
+        Echo a message; optionally specify a channel.
         Usage:
           i!echo some text
           i!echo #general hello!
@@ -67,7 +67,12 @@ class Echo(commands.Cog):
             return
 
         await target_channel.send(safe_msg)
-        if not silent and target_channel != ctx.channel:
+        if target_channel == ctx.channel:
+            try:
+                await ctx.message.delete()
+            except discord.errors.Forbidden:
+                pass  # Ignore if the bot can't delete messages
+        elif not silent and target_channel != ctx.channel:
             await ctx.send(f"✅ Echoed to {target_channel.mention}.")
 
 
