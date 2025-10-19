@@ -1,7 +1,5 @@
-# cogs/spam.py
 import asyncio
 from discord.ext import commands
-import discord
 
 
 class Spam(commands.Cog):
@@ -18,7 +16,6 @@ class Spam(commands.Cog):
         help=
         "Send a burst of messages. Usage: `!spam <count> [delay] [#channel] <message>`"
     )
-    @commands.is_owner()
     async def spam(self, ctx, count: int = None, *args):
         if count is None:
             await ctx.send(
@@ -29,7 +26,6 @@ class Spam(commands.Cog):
 
     @spam.command(name="count",
                   help="Spam messages with a count prefix (1:, 2:, …)")
-    @commands.is_owner()
     async def spam_count(self, ctx, count: int = None, *args):
         if count is None:
             await ctx.send(
@@ -92,7 +88,6 @@ class Spam(commands.Cog):
             await ctx.send("You must provide a message to spam.")
             return
 
-        # Check for active spam in this channel
         if channel.id in self.active_spams:
             await ctx.send(
                 f"Spam already running in {channel.mention}! Cancel it first with `!spam cancel`."
@@ -137,7 +132,6 @@ class Spam(commands.Cog):
         self.active_spams.pop(channel.id, None)
 
     @spam.command(name="cancel", help="Cancel an active spam in this channel")
-    @commands.is_owner()
     async def spam_cancel(self, ctx):
         task = self.active_spams.get(ctx.channel.id)
         if task:
