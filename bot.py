@@ -65,7 +65,7 @@ async def change_status():
         status = statuses[index % len(statuses)]
         await bot.change_presence(activity=status)
         index += 1
-        await asyncio.sleep(120)
+        await asyncio.sleep(3
 
 
 # -----------------------------
