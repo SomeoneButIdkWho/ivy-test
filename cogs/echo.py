@@ -2,7 +2,6 @@ from discord.ext import commands
 import discord
 import re
 
-# Discord's max message length
 MAX_MSG_LENGTH = 2000
 
 
@@ -15,20 +14,20 @@ class Echo(commands.Cog):
         help=
         "Echo any message. Use a channel mention or name at the start to send there (e.g., i!echo #general hello!), or use normally to echo here."
     )
-    @commands.cooldown(
-        1, 3, commands.BucketType.user)  # 1 use per 3 seconds per user
-    async def echo(self, ctx, *, text: str):
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def echo(self, ctx, *, text: str = None):  # Default to None
         """
-        Echo a message; optionally specify a channel or use --silent to suppress feedback.
+        Echo a message; optionally specify a channel or use --silent.
         Usage:
           i!echo some text
           i!echo #general hello!
-          i!echo <#123456789012345678> hello!
-          i!echo #general --silent secret text
         """
-        # Prevent use in DMs:
         if ctx.guild is None:
             await ctx.send("❌ Echo cannot be used in DMs for safety.")
+            return
+
+        if text is None or text.strip() == "":
+            await ctx.send("❌ Cannot echo an empty message.")
             return
 
         # Silent mode
@@ -56,10 +55,9 @@ class Echo(commands.Cog):
             if channel:
                 target_channel = channel
 
-        # Sanitize, limit message length, prevent mass mentions
+        # Check again if message is empty after channel parsing
         safe_msg = message.replace("@everyone", "@\u200beveryone").replace(
-            "@here", "@\u200bhere")
-        safe_msg = safe_msg.strip()
+            "@here", "@\u200bhere").strip()
         if len(safe_msg) > MAX_MSG_LENGTH:
             await ctx.send(
                 f"❌ Message too long! ({len(safe_msg)}/2000 characters)")
@@ -68,7 +66,6 @@ class Echo(commands.Cog):
             await ctx.send("❌ Cannot echo an empty message.")
             return
 
-        # Send message
         await target_channel.send(safe_msg)
         if not silent:
             if target_channel != ctx.channel:
@@ -78,6 +75,5 @@ class Echo(commands.Cog):
                 await target_channel.send(f"✅ Echoed successfully!")
 
 
-# Setup function, unchanged
 async def setup(bot):
     await bot.add_cog(Echo(bot))
