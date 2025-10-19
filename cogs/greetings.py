@@ -3,11 +3,12 @@ import random
 import re
 
 
-class Greetings(commands.Cog):
+class GreetingsFarewell(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
+        # Cozy greetings
         self.greetings = [
             'Hello', 'Hey', 'Yo', "hey! hi there 🌱",
             "oh hey… didn't expect to see you", "hi! how's your day going?",
@@ -43,14 +44,29 @@ class Greetings(commands.Cog):
             "hi! just being here is already enough"
         ]
 
+        # Cozy farewells
+        self.farewells = [
+            "Bye bye! 🌿", "See you later!", "Take care!",
+            "Goodbye… come back soon!", "Catch you later!", "Bye! 👋",
+            "See ya! 🌱", "Farewell… until next time", "Stay well!"
+        ]
+
         self.greeting_triggers = ['hi', 'hello', 'hey', 'wsg']
+        self.farewell_triggers = [
+            'bye', 'goodbye', 'cya', 'see ya', 'farewell'
+        ]
+
         self.bot_names = [
             'ivy', 'ivy-bot', 'ivybot', 'ivy-chan', 'ivychan', 'ivi', 'ivee'
         ]
+
         self.repeatable_greetings = [
             'sup', 'hii', 'hiii', 'hai', 'hoi', 'hola', 'bonjour',
             'como estas', 'ohayo', 'ohayo gozaimasu', 'hihi', 'hoihoi', 'pluh',
             'cuh', 'yoo', 'yooo'
+        ]
+        self.repeatable_farewells = [
+            'bye', 'byee', 'byeee', 'cya', 'see ya', 'see yaa'
         ]
 
     @commands.Cog.listener()
@@ -58,13 +74,20 @@ class Greetings(commands.Cog):
         if message.author.bot:
             return
 
-        content_lower = message.content.lower()
+        content_lower = message.content.lower().strip()
         author_mention = message.author.mention
         bot_mentioned = self.bot.user in message.mentions
         bot_name_found = any(
             re.search(rf"\b{name}\b", content_lower)
             for name in self.bot_names)
 
+        # --- IGNORE empty or mention-only messages ---
+        # if message only mentions bot (like "@Ivy") or only says name ("ivy")
+        if (bot_mentioned and len(message.content.split())
+                == 1) or content_lower in self.bot_names:
+            return
+
+        # --- Repeatable greetings ---
         repeatable_word = next((word for word in self.repeatable_greetings
                                 if re.search(rf"\b{word}\b", content_lower)),
                                None)
@@ -72,15 +95,42 @@ class Greetings(commands.Cog):
             await message.reply(f"{repeatable_word} {author_mention}")
             return
 
+        # --- Repeatable farewells ---
+        repeatable_farewell = next(
+            (word for word in self.repeatable_farewells
+             if re.search(rf"\b{word}\b", content_lower)), None)
+        if repeatable_farewell and (bot_mentioned or bot_name_found):
+            await message.reply(f"{repeatable_farewell} {author_mention}")
+            return
+
+        # --- Greeting patterns ---
         greeting_name_pattern = rf"\b({'|'.join(self.greeting_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
         name_greeting_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.greeting_triggers)})\b"
 
-        if ((re.search(greeting_name_pattern, content_lower) or re.search(
-                name_greeting_pattern, content_lower) or bot_mentioned)
-                and content_lower.strip() not in self.bot_names):
+        # --- Farewell patterns ---
+        farewell_name_pattern = rf"\b({'|'.join(self.farewell_triggers)})\b.*\b({'|'.join(self.bot_names)})\b"
+        name_farewell_pattern = rf"\b({'|'.join(self.bot_names)})\b.*\b({'|'.join(self.farewell_triggers)})\b"
+
+        # --- Greetings check ---
+        if ((re.search(greeting_name_pattern, content_lower)
+             or re.search(name_greeting_pattern, content_lower) or
+             (bot_mentioned and any(word in content_lower
+                                    for word in self.greeting_triggers)))
+                and content_lower not in self.bot_names):
             await message.reply(
                 f"{random.choice(self.greetings)} {author_mention}")
+            return
+
+        # --- Farewells check ---
+        if ((re.search(farewell_name_pattern, content_lower)
+             or re.search(name_farewell_pattern, content_lower) or
+             (bot_mentioned and any(word in content_lower
+                                    for word in self.farewell_triggers)))
+                and content_lower not in self.bot_names):
+            await message.reply(
+                f"{random.choice(self.farewells)} {author_mention}")
+            return
 
 
 async def setup(bot):
-    await bot.add_cog(Greetings(bot))
+    await bot.add_cog(GreetingsFarewell(bot))
