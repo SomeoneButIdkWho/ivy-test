@@ -10,6 +10,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="i!", intents=intents)
 
+
 async def load_cogs():
     cogs_folder = "./cogs"
     for filename in os.listdir(cogs_folder):
@@ -21,27 +22,36 @@ async def load_cogs():
             except Exception as e:
                 print(f"Failed to load cog {cog_name}: {e}")
 
+
 statuses = [
     discord.Game(name="i!help"),
-    discord.Activity(type=discord.ActivityType.listening, name="your commands"),
-    discord.Activity(type=discord.ActivityType.watching, name="over Ivy's server"),
-    discord.Activity(type=discord.ActivityType.competing, name="in bot olympics")
+    discord.Activity(type=discord.ActivityType.listening,
+                     name="your commands"),
+    discord.Activity(type=discord.ActivityType.watching,
+                     name="over Ivy's server"),
+    discord.Activity(type=discord.ActivityType.competing,
+                     name="in bot olympics")
 ]
+
 
 async def change_status():
     for status in statuses:
         await bot.change_presence(activity=status)
         await asyncio.sleep(5)
 
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+    bot.loop.create_task(change_status())
+
 
 async def main():
     async with bot:
         await load_cogs()
         keep_alive()
         await bot.start(BOT_TOKEN)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
