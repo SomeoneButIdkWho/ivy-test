@@ -14,54 +14,47 @@ class React(commands.Cog):
         Unicode -> stays string
         Custom emoji -> PartialEmoji
         """
-        if emoji_str.startswith("<") and emoji_str.endswith(">"):
+        if isinstance(
+                emoji_str,
+                str) and emoji_str.startswith("<") and emoji_str.endswith(">"):
             try:
                 return discord.PartialEmoji.from_str(emoji_str)
-            except:
+            except Exception:
                 pass
-        return emoji_str  # unicode emoji
+        return emoji_str  # Unicode emoji
 
-    @commands.command(name="react")
+    @commands.command(
+        name="react",
+        help=
+        "React to a message in this channel. Usage: i!react <message_id> <emoji> [emoji...]"
+    )
     async def react(self, ctx, message_id: int = None, *emojis):
         """
-        React to a message in the CURRENT channel only.
-        Usage: i!react message_id 😀 <:custom:123> <a:animated:456>
+        React to a message in the current channel only.
+        Usage: i!react <message_id> 😀 <:custom:123> <a:animated:456>
         """
         if message_id is None or not emojis:
-            return await ctx.send(
-                "❌ Usage: `i!react message_id emoji1 emoji2 ...`")
+            await ctx.send("❌ Usage: `i!react <message_id> emoji1 emoji2 ...`")
+            return
 
-        # Try fetching the message in ANY channel
+        # Try fetching the message in the current channel
         try:
-            # If the user provides a channel ID or mention
-            channel_arg = ctx.message.content.split(
-            )[1]  # assumes command: i!react <channel> <message_id> <emoji...>
-
-            # Convert mention to ID if needed
-            if channel_arg.startswith("<#") and channel_arg.endswith(">"):
-                channel_id = int(channel_arg[2:-1])
-            else:
-                channel_id = int(channel_arg)
-
-            # Fetch channel object
-            channel = ctx.guild.get_channel(
-                channel_id) or await ctx.guild.fetch_channel(channel_id)
-
-            # Fetch message
-            message_id = int(ctx.message.content.split()[2])
-            message = await channel.fetch_message(message_id)
-
+            message = await ctx.channel.fetch_message(int(message_id))
         except discord.NotFound:
-            return await ctx.send("❌ Message or channel not found.")
-        except discord.Forbidden:
-            return await ctx.send("❌ I cannot access that channel or message.")
+            await ctx.send("❌ Message not found.")
+            return
+        except (discord.Forbidden, AttributeError):
+            await ctx.send("❌ I cannot access that message.")
+            return
         except Exception as e:
-            return await ctx.send(f"⚠️ Unexpected error: {e}")
+            await ctx.send(f"⚠️ Unexpected error: `{e}`")
+            return
 
-        # Permission check
-        if not ctx.channel.permissions_for(ctx.me).add_reactions:
-            return await ctx.send(
-                "❌ I don’t have permission to add reactions here.")
+        # Permission check for add_reactions in THIS channel
+        perms = ctx.channel.permissions_for(ctx.me)
+        if not perms.add_reactions:
+            await ctx.send("❌ I don’t have permission to add reactions here.")
+            return
 
         failed = []
 
@@ -73,10 +66,10 @@ class React(commands.Cog):
                 failed.append(e)
 
         if failed:
-            return await ctx.send(
-                f"⚠️ These reactions failed: {', '.join(failed)}")
-
-        await ctx.send(f"✅ Reacted to the message with: {', '.join(emojis)}")
+            await ctx.send(f"⚠️ Could not react with: {', '.join(failed)}")
+        else:
+            await ctx.send(
+                f"✅ Reacted to the message with: {', '.join(emojis)}")
 
 
 async def setup(bot):
