@@ -14,16 +14,37 @@ class Reacts(commands.Cog):
         Convert raw input to PartialEmoji for custom/animated emojis,
         or keep unicode emoji as string.
         """
-        # Allow already-resolved Emoji objects
         if not isinstance(emoji_str, str):
             return emoji_str
-        try:
-            if emoji_str.startswith("<") and emoji_str.endswith(">"):
+
+        emoji_str = emoji_str.strip()
+
+        if emoji_str.startswith("<") and emoji_str.endswith(">"):
+            try:
                 return discord.PartialEmoji.from_str(emoji_str)
-        except Exception:
-            # fallback to raw string
-            pass
+            except Exception:
+                pass
+
         return emoji_str
+
+    @staticmethod
+    def emoji_matches(reaction_emoji, parsed_emoji):
+        """
+        Compare two emojis for matching, handling unicode and custom emojis.
+        """
+        if isinstance(reaction_emoji, discord.PartialEmoji) and isinstance(
+                parsed_emoji, discord.PartialEmoji):
+            return reaction_emoji.id == parsed_emoji.id
+
+        if isinstance(reaction_emoji, discord.Emoji) and isinstance(
+                parsed_emoji, discord.PartialEmoji):
+            return reaction_emoji.id == parsed_emoji.id
+
+        if isinstance(parsed_emoji, discord.PartialEmoji) and isinstance(
+                reaction_emoji, discord.Emoji):
+            return parsed_emoji.id == reaction_emoji.id
+
+        return str(reaction_emoji) == str(parsed_emoji)
 
     async def _find_message(
         self, ctx: commands.Context, message_id: int
@@ -33,14 +54,12 @@ class Reacts(commands.Cog):
         accessible text channels in the guild.
         Returns (message, channel) or (None, None).
         """
-        # Try current channel
         try:
             msg = await ctx.channel.fetch_message(message_id)
             return msg, ctx.channel
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             pass
 
-        # If not found, and we're in a guild, try other text channels
         if ctx.guild:
             for channel in ctx.guild.text_channels:
                 perms = channel.permissions_for(ctx.guild.me)
@@ -68,7 +87,7 @@ class Reacts(commands.Cog):
               "Usage: i!react message_id 😀 🎉 👍 <:custom:123> <a:anim:456>"))
     async def react(self,
                     ctx: commands.Context,
-                    message_id: int = None,
+                    message_id: Optional[int] = None,
                     *emojis):
         if message_id is None or not emojis:
             await ctx.send("❌ Usage:\n`i!react message_id 😀 🎉 👍`")
@@ -89,11 +108,13 @@ class Reacts(commands.Cog):
                 "❌ I don't have permission to add reactions in that channel.")
             return
 
+        success = []
         errors = []
         for raw in emojis:
             parsed = self.parse_emoji(raw)
             try:
                 await target_message.add_reaction(parsed)
+                success.append(raw)
             except discord.Forbidden:
                 errors.append(f"{raw} (forbidden)")
             except discord.HTTPException as e:
@@ -101,12 +122,16 @@ class Reacts(commands.Cog):
             except Exception as e:
                 errors.append(f"{raw} ({type(e).__name__})")
 
-        if errors:
-            await ctx.send(f"⚠️ Some reactions failed: {', '.join(errors)}")
-        else:
-            await ctx.send(
-                f"✅ Added reactions {', '.join(emojis)} to [this message]({target_message.jump_url}) in {target_channel.mention}!"
+        response_parts = []
+        if success:
+            response_parts.append(
+                f"✅ Added reactions {', '.join(success)} to [this message]({target_message.jump_url}) in {target_channel.mention}!"
             )
+        if errors:
+            response_parts.append(
+                f"⚠️ Some reactions failed: {', '.join(errors)}")
+
+        await ctx.send("\n".join(response_parts))
 
     @commands.command(
         name="unreact",
@@ -114,7 +139,7 @@ class Reacts(commands.Cog):
               "Usage: i!unreact message_id 😀 🎉 👍 <:custom:123> <a:anim:456>"))
     async def unreact(self,
                       ctx: commands.Context,
-                      message_id: int = None,
+                      message_id: Optional[int] = None,
                       *emojis):
         if message_id is None or not emojis:
             await ctx.send("❌ Usage:\n`i!unreact message_id 😀 🎉 👍`")
@@ -138,10 +163,9 @@ class Reacts(commands.Cog):
         for raw in emojis:
             parsed = self.parse_emoji(raw)
 
-            # Find if reaction exists on the message (compare string forms)
             found_reaction = None
             for r in target_message.reactions:
-                if str(r.emoji) == str(parsed):
+                if self.emoji_matches(r.emoji, parsed):
                     found_reaction = r
                     break
 
@@ -157,7 +181,7 @@ class Reacts(commands.Cog):
                         await target_message.remove_reaction(
                             parsed, bot_member)
                     else:
-                        await target_message.clear_reaction(parsed)
+                        await target_message.remove_reaction(parsed, ctx.me)
                 removed.append(raw)
             except discord.Forbidden:
                 forbidden.append(raw)
