@@ -31,13 +31,30 @@ class React(commands.Cog):
             return await ctx.send(
                 "❌ Usage: `i!react message_id emoji1 emoji2 ...`")
 
-        # Try fetching the message in the SAME channel
+        # Try fetching the message in ANY channel
         try:
-            message = await ctx.channel.fetch_message(message_id)
+            # If the user provides a channel ID or mention
+            channel_arg = ctx.message.content.split(
+            )[1]  # assumes command: i!react <channel> <message_id> <emoji...>
+
+            # Convert mention to ID if needed
+            if channel_arg.startswith("<#") and channel_arg.endswith(">"):
+                channel_id = int(channel_arg[2:-1])
+            else:
+                channel_id = int(channel_arg)
+
+            # Fetch channel object
+            channel = ctx.guild.get_channel(
+                channel_id) or await ctx.guild.fetch_channel(channel_id)
+
+            # Fetch message
+            message_id = int(ctx.message.content.split()[2])
+            message = await channel.fetch_message(message_id)
+
         except discord.NotFound:
-            return await ctx.send("❌ Message not found in this channel.")
+            return await ctx.send("❌ Message or channel not found.")
         except discord.Forbidden:
-            return await ctx.send("❌ I cannot access that message.")
+            return await ctx.send("❌ I cannot access that channel or message.")
         except Exception as e:
             return await ctx.send(f"⚠️ Unexpected error: {e}")
 
