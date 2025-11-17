@@ -62,7 +62,14 @@ class React(commands.Cog):
             parsed = self.parse_emoji(e)
             try:
                 await message.add_reaction(parsed)
-            except Exception:
+            except discord.Forbidden as ex:
+                await ctx.send(f"❌ Forbidden for {e}: {ex}")
+                failed.append(e)
+            except discord.HTTPException as ex:
+                await ctx.send(f"❌ Failed for {e}: {ex}")
+                failed.append(e)
+            except Exception as ex:
+                await ctx.send(f"❌ Unknown error for {e}: {ex}")
                 failed.append(e)
 
         if failed:
